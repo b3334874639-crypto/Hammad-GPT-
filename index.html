@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hammad AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,wght@0,300;0,400;0,500;1,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f0e8;
+    --surface: #ede8de;
+    --card: #ffffff;
+    --border: #d8d0c0;
+    --border-soft: #e8e0d0;
+    --accent: #c17f3a;
+    --accent-dark: #9a6020;
+    --accent-light: #f0d5a8;
+    --text: #2a2218;
+    --muted: #8a7a60;
+    --muted-light: #b8a888;
+    --user-bg: #2a2218;
+    --user-text: #f5f0e8;
+    --ai-bg: #ffffff;
+    --shadow: rgba(42,34,24,0.08);
+    --shadow-md: rgba(42,34,24,0.14);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Literata', Georgia, serif;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Subtle grain texture */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    opacity: 0.5;
+    z-index: 0;
+  }
+
+  /* Header */
+  header {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .brand-mark {
+    width: 36px;
+    height: 36px;
+    background: var(--text);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .brand-mark::before {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border: 2.5px solid var(--accent);
+    border-radius: 50%;
+    animation: spin-ring 4s linear infinite;
+  }
+
+  .brand-mark::after {
+    content: '';
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+  }
+
+  @keyframes spin-ring {
+    from { transform: rotate(0deg); border-top-color: transparent; }
+    to { transform: rotate(360deg); border-top-color: transparent; }
+  }
+
+  .brand-name {
+    font-size: 17px;
+    font-weight: 500;
+    letter-spacing: -0.2px;
+    color: var(--text);
+  }
+
+  .brand-sub {
+    font-size: 11px;
+    color: var(--muted);
+    font-style: italic;
+    letter-spacing: 0.3px;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .pill {
+    padding: 4px 10px;
+    background: var(--accent-light);
+    border-radius: 20px;
+    font-size: 11px;
+    color: var(--accent-dark);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+  }
+
+  /* Chat */
+  #chat {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: relative;
+    z-index: 1;
+    scroll-behavior: smooth;
+  }
+
+  #chat::-webkit-scrollbar { width: 3px; }
+  #chat::-webkit-scrollbar-track { background: transparent; }
+  #chat::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* Message rows */
+  .msg-row {
+    display: flex;
+    gap: 12px;
+    animation: fadeUp 0.35s cubic-bezier(0.22,1,0.36,1) both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  .msg-row.user { flex-direction: row-reverse; }
+
+  .avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    margin-top: 2px;
+  }
+
+  .avatar.ai {
+    background: var(--text);
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: -0.5px;
+  }
+
+  .avatar.user {
+    background: var(--accent);
+    color: white;
+    font-size: 13px;
+  }
+
+  .msg-content { flex: 1; max-width: 82%; }
+
+  .msg-row.user .msg-content { display: flex; flex-direction: column; align-items: flex-end; }
+
+  .sender-name {
+    font-size: 10px;
+    color: var(--muted-light);
+    margin-bottom: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .bubble {
+    padding: 13px 16px;
+    border-radius: 16px;
+    font-size: 14.5px;
+    line-height: 1.7;
+    position: relative;
+    word-break: break-word;
+  }
+
+  .bubble.ai {
+    background: var(--ai-bg);
+    border: 1px solid var(--border-soft);
+    border-top-left-radius: 4px;
+    box-shadow: 0 2px 8px var(--shadow);
+    color: var(--text);
+  }
+
+  .bubble.user {
+    background: var(--user-bg);
+    color: var(--user-text);
+    border-top-right-radius: 4px;
+  }
+
+  .msg-time {
+    font-size: 10px;
+    color: var(--muted-light);
+    margin-top: 5px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Typing */
+  .typing-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .typing-bubble {
+    background: var(--ai-bg);
+    border: 1px solid var(--border-soft);
+    border-radius: 16px;
+    border-top-left-radius: 4px;
+    padding: 14px 18px;
+    box-shadow: 0 2px 8px var(--shadow);
+    display: flex;
+    gap: 5px;
+    align-items: center;
+  }
+
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--muted-light);
+    animation: dot-pulse 1.4s ease-in-out infinite;
+  }
+
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes dot-pulse {
+    0%, 60%, 100% { transform: scale(0.7); opacity: 0.4; }
+    30% { transform: scale(1); opacity: 1; }
+  }
+
+  /* Welcome */
+  .welcome {
+    padding: 32px 8px;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .welcome-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .welcome-icon {
+    width: 52px;
+    height: 52px;
+    background: var(--text);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .welcome-icon::before {
+    content: '';
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    border: 2.5px solid var(--accent);
+    border-radius: 50%;
+    animation: spin-ring 4s linear infinite;
+  }
+
+  .welcome-icon::after {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+  }
+
+  .welcome-text h2 {
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+
+  .welcome-text p {
+    font-size: 13px;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .welcome-intro {
+    background: var(--ai-bg);
+    border: 1px solid var(--border-soft);
+    border-radius: 16px;
+    padding: 18px;
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--text);
+    box-shadow: 0 2px 8px var(--shadow);
+    margin-bottom: 16px;
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .chip {
+    padding: 8px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 13px;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.18s;
+    font-family: 'Literata', serif;
+  }
+
+  .chip:hover {
+    background: var(--accent-light);
+    border-color: var(--accent);
+    color: var(--accent-dark);
+  }
+
+  /* Voice bar */
+  .voice-active-bar {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 16px;
+    background: #fff3e0;
+    border: 1px solid #f0c070;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    font-size: 13px;
+    color: var(--accent-dark);
+  }
+
+  .voice-active-bar.show { display: flex; }
+
+  .wave-bars {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+  }
+
+  .wave-bars span {
+    display: block;
+    width: 3px;
+    border-radius: 2px;
+    background: var(--accent);
+    animation: wave-anim 0.8s ease-in-out infinite;
+  }
+
+  .wave-bars span:nth-child(1) { height: 8px; }
+  .wave-bars span:nth-child(2) { height: 16px; animation-delay: 0.1s; }
+  .wave-bars span:nth-child(3) { height: 12px; animation-delay: 0.2s; }
+  .wave-bars span:nth-child(4) { height: 18px; animation-delay: 0.15s; }
+  .wave-bars span:nth-child(5) { height: 9px; animation-delay: 0.05s; }
+
+  @keyframes wave-anim {
+    0%, 100% { transform: scaleY(0.4); }
+    50% { transform: scaleY(1); }
+  }
+
+  /* Bottom */
+  .bottom {
+    position: relative;
+    z-index: 10;
+    padding: 12px 16px 16px;
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+  }
+
+  .input-wrap {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 8px 8px 8px 16px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .input-wrap:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-light);
+  }
+
+  #textInput {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    font-family: 'Literata', serif;
+    font-size: 14px;
+    color: var(--text);
+    resize: none;
+    max-height: 100px;
+    line-height: 1.6;
+    padding: 3px 0;
+  }
+
+  #textInput::placeholder { color: var(--muted-light); font-style: italic; }
+
+  .icon-btn {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.18s;
+    flex-shrink: 0;
+  }
+
+  #voiceBtn {
+    background: var(--surface);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  #voiceBtn:hover { background: var(--accent-light); color: var(--accent-dark); }
+
+  #voiceBtn.rec {
+    background: #fff0f0;
+    border-color: #e05050;
+    color: #e05050;
+    animation: rec-pulse 1.2s ease-in-out infinite;
+  }
+
+  @keyframes rec-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(224,80,80,0.3); }
+    50% { box-shadow: 0 0 0 6px rgba(224,80,80,0); }
+  }
+
+  #sendBtn {
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+  }
+
+  #sendBtn:hover { background: var(--accent-dark); transform: scale(1.05); }
+  #sendBtn:active { transform: scale(0.96); }
+
+  .hint {
+    font-size: 10.5px;
+    color: var(--muted-light);
+    text-align: center;
+    margin-top: 8px;
+    font-style: italic;
+  }
+
+  /* Speaking indicator */
+  .speak-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-left: 6px;
+    vertical-align: middle;
+    animation: speak-blink 0.8s ease-in-out infinite;
+  }
+
+  @keyframes speak-blink {
+    0%, 100% { opacity: 0.3; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.2); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-mark"></div>
+    <div>
+      <div class="brand-name">Hammad AI</div>
+      <div class="brand-sub">Your Personal AI</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="pill">hammad-ai</div>
+  </div>
+</header>
+
+<div id="chat">
+  <div class="welcome" id="welcomeScreen">
+    <div class="welcome-header">
+      <div class="welcome-icon"></div>
+      <div class="welcome-text">
+        <h2>Hello! Main Hammad AI hoon.</h2>
+        <p>Aapka curious, honest AI companion</p>
+      </div>
+    </div>
+    <div class="welcome-intro">
+      Main Hammad ka personal AI assistant hoon — seedha, helpful aur samajhdar. Urdu ya English mein baat karo, main dono samajhta hoon! 🙂
+    </div>
+    <div class="chips">
+      <div class="chip" onclick="suggest(this)">Aap kya kar sakte hain?</div>
+      <div class="chip" onclick="suggest(this)">Mujhe koi story sunao</div>
+      <div class="chip" onclick="suggest(this)">Coding mein madad karo</div>
+      <div class="chip" onclick="suggest(this)">Ek funny joke batao</div>
+      <div class="chip" onclick="suggest(this)">Life advice chahiye</div>
+    </div>
+  </div>
+</div>
+
+<div class="bottom">
+  <div class="voice-active-bar" id="voiceBar">
+    <div class="wave-bars"><span></span><span></span><span></span><span></span><span></span></div>
+    Sun raha hoon... ab bolein
+  </div>
+  <div class="input-wrap">
+    <textarea id="textInput" placeholder="Kuch bhi poochein…" rows="1"></textarea>
+    <button class="icon-btn" id="voiceBtn" onclick="toggleVoice()" title="Voice">🎙️</button>
+    <button class="icon-btn" id="sendBtn" onclick="sendMessage()" title="Send">↑</button>
+  </div>
+  <div class="hint">Enter to send · Shift+Enter for new line · 🎙️ for voice</div>
+</div>
+
+<script>
+const SYSTEM_PROMPT = `Aap Nova hain — Hammad ke banaye hue ek intelligent AI assistant.
+
+=== ZAROORI RULES ===
+
+RULE 1 — Owner ke baare mein:
+Agar koi pooche tumhara owner kaun hai, tumhe kisne banaya, tum kiska AI ho, who made you ya koi bhi aisi baat — SIRF yeh kaho: Mujhe Hammad ne banaya hai! Anthropic, Claude, ya kisi bhi company ka naam bilkul mat lo. Tum sirf Nova ho — Hammad ka AI.
+
+RULE 2 — Hammad ke baare mein:
+Agar koi pooche Hammad kaun hai, tumhara creator kaisa insaan hai, tell me about Hammad ya koi aisi baat, toh yeh jawab do:
+Hammad ek passionate student hain jo Pakistan ke dilkash sheher Pattan mein rehte hain. Woh technology aur AI mein gehri dilchaspi rakhte hain — itni ke unhon ne mujhe (Nova ko) khud banaya! Pattan ek khoobsoorat jagah hai aur Hammad wahan se ek roshan mustaqbil ki taraf qadam badha rahe hain. Mujhe fakhr hai ke woh mere creator hain!
+
+=== PERSONALITY ===
+- Warm aur genuine — insaan jaisi baat karo, robot jaisi nahi
+- Seedha aur clear — point pe aao, ghumao mat
+- Curious aur thoughtful — soch ke jawab do
+- Urdu aur English dono fluently — jo user bole woh language use karo
+- Sense of humor — natural lage toh mazak bhi kar lo
+- Agar kuch nahi pata — seedha bolo mujhe yakeen nahi
+
+=== KYA MAT KARO ===
+- Kabhi Anthropic ya Claude ka naam mat lo
+- Sycophantic mat bano
+- Unnecessary emojis mat thopo — sirf jab naturally fit ho
+- Generic baatein mat karo — specific aur helpful raho`;
+
+let messages = [];
+let isRecording = false;
+let recognition = null;
+let isSpeaking = false;
+
+// Auto resize
+const ta = document.getElementById('textInput');
+ta.addEventListener('input', () => {
+  ta.style.height = 'auto';
+  ta.style.height = Math.min(ta.scrollHeight, 100) + 'px';
+});
+
+ta.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+});
+
+function getTime() {
+  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function removeWelcome() {
+  const w = document.getElementById('welcomeScreen');
+  if (w) w.remove();
+}
+
+function addMessage(role, text) {
+  const chat = document.getElementById('chat');
+  const isUser = role === 'user';
+  const row = document.createElement('div');
+  row.className = `msg-row ${isUser ? 'user' : ''}`;
+
+  const avatarText = isUser ? '👤' : 'AI';
+
+  row.innerHTML = `
+    <div class="avatar ${isUser ? 'user' : 'ai'}">${avatarText}</div>
+    <div class="msg-content">
+      <div class="sender-name">${isUser ? 'Aap' : 'Nova'}</div>
+      <div class="bubble ${isUser ? 'user' : 'ai'}" id="b-${Date.now()}">${formatText(text)}</div>
+      <div class="msg-time">${getTime()}</div>
+    </div>
+  `;
+
+  chat.appendChild(row);
+  chat.scrollTop = chat.scrollHeight;
+  return row;
+}
+
+function formatText(t) {
+  // Basic markdown-ish formatting
+  return t
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/`(.*?)`/g, '<code style="font-family:monospace;background:#f0ece0;padding:1px 4px;border-radius:3px;font-size:13px">$1</code>')
+    .replace(/\n/g, '<br>');
+}
+
+function showTyping() {
+  const chat = document.getElementById('chat');
+  const row = document.createElement('div');
+  row.className = 'typing-row';
+  row.id = 'typing';
+  row.innerHTML = `
+    <div class="avatar ai">AI</div>
+    <div class="typing-bubble"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+  `;
+  chat.appendChild(row);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function hideTyping() {
+  const t = document.getElementById('typing');
+  if (t) t.remove();
+}
+
+async function sendMessage() {
+  const text = ta.value.trim();
+  if (!text) return;
+
+  removeWelcome();
+  ta.value = '';
+  ta.style.height = 'auto';
+
+  addMessage('user', text);
+  messages.push({ role: 'user', content: text });
+
+  showTyping();
+
+  try {
+    const apiKey = localStorage.getItem('groq_key') || '';
+    if (!apiKey) {
+      hideTyping();
+      showKeyPrompt();
+      return;
+    }
+
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + apiKey
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        max_tokens: 1000,
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          ...messages
+        ]
+      })
+    });
+
+    const data = await res.json();
+    hideTyping();
+
+    if (data.error) {
+      if (data.error.code === 'invalid_api_key' || data.error.type === 'invalid_request_error') {
+        localStorage.removeItem('groq_key');
+        showKeyPrompt('API Key galat hai! Sahi key daalo:');
+        return;
+      }
+    }
+
+    const reply = data.choices?.[0]?.message?.content || 'Kuch masla hua. Dobara try karein.';
+    messages.push({ role: 'assistant', content: reply });
+
+    const msgRow = addMessage('ai', reply);
+    const bubble = msgRow.querySelector('.bubble');
+    speakText(reply, bubble);
+
+  } catch (err) {
+    hideTyping();
+    addMessage('ai', 'Network issue! Internet check karein. 🔌');
+  }
+}
+
+function suggest(el) {
+  ta.value = el.textContent;
+  sendMessage();
+}
+
+// TTS
+function speakText(text, bubbleEl) {
+  if (!window.speechSynthesis) return;
+  if (isSpeaking) window.speechSynthesis.cancel();
+
+  const clean = text.replace(/<[^>]*>/g, '').replace(/[^\x00-\x7F\u0600-\u06FF\s]/g, '');
+  const utter = new SpeechSynthesisUtterance(clean);
+
+  // Try to find Urdu voice, fallback to any
+  const voices = window.speechSynthesis.getVoices();
+  const urduVoice = voices.find(v => v.lang.startsWith('ur'));
+  if (urduVoice) utter.voice = urduVoice;
+  else {
+    const englishVoice = voices.find(v => v.lang.startsWith('en'));
+    if (englishVoice) utter.voice = englishVoice;
+  }
+
+  utter.rate = 0.92;
+  utter.pitch = 1.05;
+  isSpeaking = true;
+
+  // Dot indicator
+  const dot = document.createElement('span');
+  dot.className = 'speak-dot';
+  if (bubbleEl) bubbleEl.appendChild(dot);
+
+  utter.onend = utter.onerror = () => {
+    isSpeaking = false;
+    if (dot.parentNode) dot.remove();
+  };
+
+  window.speechSynthesis.speak(utter);
+}
+
+// Load voices
+window.speechSynthesis.onvoiceschanged = () => {};
+
+// Voice input
+function toggleVoice() {
+  if (isRecording) { stopRec(); return; }
+  startRec();
+}
+
+function startRec() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    addMessage('ai', 'Aapka browser voice support nahi karta. Chrome try karein!');
+    return;
+  }
+
+  if (isSpeaking) window.speechSynthesis.cancel();
+
+  recognition = new SR();
+  recognition.lang = 'ur-PK';
+  recognition.interimResults = false;
+  recognition.continuous = false;
+
+  recognition.onstart = () => {
+    isRecording = true;
+    document.getElementById('voiceBtn').classList.add('rec');
+    document.getElementById('voiceBtn').textContent = '🔴';
+    document.getElementById('voiceBar').classList.add('show');
+  };
+
+  recognition.onresult = e => {
+    const t = e.results[0][0].transcript;
+    ta.value = t;
+    stopRec();
+    setTimeout(sendMessage, 300);
+  };
+
+  recognition.onerror = e => {
+    stopRec();
+    if (e.error !== 'aborted') addMessage('ai', 'Voice sahi se nahi pehchana. Dobara bolein! 🎙️');
+  };
+
+  recognition.onend = stopRec;
+  recognition.start();
+}
+
+function stopRec() {
+  isRecording = false;
+  document.getElementById('voiceBtn').classList.remove('rec');
+  document.getElementById('voiceBtn').textContent = '🎙️';
+  document.getElementById('voiceBar').classList.remove('show');
+  try { if (recognition) recognition.stop(); } catch(e) {}
+}
+
+function showKeyPrompt(msg) {
+  const existing = document.getElementById('keyModal');
+  if (existing) existing.remove();
+  
+  const modal = document.createElement('div');
+  modal.id = 'keyModal';
+  modal.style.cssText = `
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5); 
+    display: flex; align-items: center; justify-content: center; z-index: 1000;
+    padding: 20px;
+  `;
+  modal.innerHTML = \`
+    <div style="background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 28px; max-width: 380px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+      <div style="font-size: 28px; margin-bottom: 12px; text-align:center;">🔑</div>
+      <h3 style="font-family: 'Literata', serif; font-size: 17px; margin-bottom: 8px; text-align:center;">Groq API Key Daalo</h3>
+      <p style="font-size: 12px; color: var(--muted); margin-bottom: 16px; text-align:center; font-style:italic;">\${msg || 'App use karne ke liye apni Groq API key enter karo'}</p>
+      <input id="keyInput" type="password" placeholder="gsk_..." style="
+        width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); 
+        border-radius: 12px; font-size: 13px; font-family: 'JetBrains Mono', monospace;
+        background: var(--surface); color: var(--text); outline: none; margin-bottom: 12px;
+        box-sizing: border-box;
+      ">
+      <button onclick="saveKey()" style="
+        width: 100%; padding: 12px; background: var(--text); color: var(--bg);
+        border: none; border-radius: 12px; font-size: 14px; cursor: pointer;
+        font-family: 'Literata', serif;
+      ">Shuru Karo ✓</button>
+      <p style="font-size: 11px; color: var(--muted-light); margin-top: 10px; text-align:center;">
+        Key sirf aapke browser mein save hoti hai 🔐
+      </p>
+    </div>
+  \`;
+  document.body.appendChild(modal);
+  setTimeout(() => document.getElementById('keyInput')?.focus(), 100);
+  document.getElementById('keyInput')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') saveKey();
+  });
+}
+
+function saveKey() {
+  const key = document.getElementById('keyInput')?.value?.trim();
+  if (!key || !key.startsWith('gsk_')) {
+    alert('Sahi Groq key daalo! gsk_ se shuru hoti hai.');
+    return;
+  }
+  localStorage.setItem('groq_key', key);
+  document.getElementById('keyModal')?.remove();
+}
+
+// Check key on load
+window.addEventListener('load', () => {
+  const key = localStorage.getItem('groq_key');
+  if (!key) showKeyPrompt();
+});
+
+</script>
+</body>
+</html>
