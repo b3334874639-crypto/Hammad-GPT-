@@ -705,7 +705,7 @@ async function sendMessage() {
 
     if (data.error) {
       if (data.error.code === 'invalid_api_key' || data.error.type === 'invalid_request_error') {
-        localStorage.removeItem('groq_key');
+        localStorage.removeItem('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');
         showKeyPrompt('API Key galat hai! Sahi key daalo:');
         return;
       }
@@ -862,13 +862,13 @@ function saveKey() {
     alert('Sahi Groq key daalo! gsk_ se shuru hoti hai.');
     return;
   }
-  localStorage.setItem('groq_key', key);
+  localStorage.setItem('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', key);
   document.getElementById('keyModal')?.remove();
 }
 
 // Check key on load
 window.addEventListener('load', () => {
-  const key = localStorage.getItem('groq_key');
+  const key = localStorage.getItem('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');
   if (!key) showKeyPrompt();
 });
 
