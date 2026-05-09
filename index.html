@@ -677,7 +677,7 @@ async function sendMessage() {
   showTyping();
 
   try {
-    const apiKey = localStorage.getItem('groq_key') || '';
+    const apiKey = localStorage.getItem('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') || '';
     if (!apiKey) {
       hideTyping();
       showKeyPrompt();
@@ -688,7 +688,7 @@ async function sendMessage() {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + apiKey
+        'Authorization': 'Bearer ' + api
       },
       body: JSON.stringify({
         model: 'llama-3.3-70b-versatile',
